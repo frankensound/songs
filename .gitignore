@@ -1,0 +1,12 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea
+
+# Local environment
+.env
+
+# Plugin directory
+/.quarkus/cli/plugins/
