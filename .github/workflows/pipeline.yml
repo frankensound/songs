@@ -16,8 +16,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'oracle'
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
       - name: Run tests
@@ -56,13 +54,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
       - name: Build and push Docker image
-        run: ./gradlew jib
-        env:
-          JIB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          JIB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: ./gradlew jib -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
 
   deploy:
-      needs: [ build-and-test, publish, snyk-docker-image, snyk-static-code ]
+      needs: [ build-and-test, publish, snyk-static-code ]
       runs-on: ubuntu-latest
       steps:
         - name: Finish
