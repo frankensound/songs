@@ -5,6 +5,7 @@ val prometheus_version: String by project
 val exposed_version: String by project
 val h2_version: String by project
 val postgresql_version: String by project
+val hikari_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.21"
@@ -70,6 +71,9 @@ dependencies {
 
     // PostgreSQL JDBC Driver
     implementation("org.postgresql:postgresql:$postgresql_version")
+
+    // Database connection pooling
+    implementation("com.zaxxer:HikariCP:$hikari_version")
 
     implementation("ch.qos.logback:logback-classic:$logback_version")
 

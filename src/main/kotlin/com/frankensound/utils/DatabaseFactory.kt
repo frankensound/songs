@@ -1,6 +1,8 @@
 package com.frankensound.utils
 
 import com.frankensound.models.*
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.*
@@ -16,13 +18,19 @@ fun Application.databaseModule() {
 }
 
 object DatabaseFactory {
-    fun init(url: String, user: String, password: String, driver: String) {
-        val database =  Database.connect(
-            url = url,
-            driver = driver,
-            user = user,
-            password = password
-        )
+    fun init(url: String, user: String, pass: String, driver: String) {
+        val config = HikariConfig().apply {
+            jdbcUrl = url
+            driverClassName = driver
+            username = user
+            password = pass
+            maximumPoolSize = 30
+            isAutoCommit = false
+            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            validate()
+        }
+        val dataSource = HikariDataSource(config)
+        val database =  Database.connect(dataSource)
 
         transaction(database) {
             SchemaUtils.create(Songs, Details)
