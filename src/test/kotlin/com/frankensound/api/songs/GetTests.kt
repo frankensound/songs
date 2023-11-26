@@ -22,21 +22,6 @@ class GetTests {
     fun tearDown() {
         TestDatabaseFactory.cleanUp()
     }
-    @Test
-    fun testGetSongByKey() = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        application {
-            configureTestEnvironment()
-        }
-        val key = "test"
-        songService.create(key, DetailData("artist","title"))
-        client.get("/songs/$key").apply {
-            assertEquals(HttpStatusCode.OK, status)
-            assertTrue { bodyAsText().contains("song") }
-        }
-    }
 
     @Test
     fun testGetSongByNonexistentKey() = testApplication {

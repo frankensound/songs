@@ -2,9 +2,10 @@ name: Songs microservice CI/CD
 
 on:
   push:
-    branches: [ main ]
-    paths:
-    - ".github/workflows/pipeline.yml"
+    paths-ignore:
+      - "README.md"
+    branches:
+      - main
 
 jobs:
   build-and-test:
