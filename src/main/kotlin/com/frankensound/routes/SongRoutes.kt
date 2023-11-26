@@ -4,6 +4,7 @@ import com.frankensound.models.DetailData
 import com.frankensound.models.RequestDTO
 import com.frankensound.models.SongData.Companion.serialized
 import com.frankensound.services.SongService
+import com.frankensound.utils.messaging.RabbitMQManager
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -24,6 +25,7 @@ fun Route.songRouting() {
             val key = call.parameters["key"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing key.")
             val song = songService.get(key)
             if (song != null) {
+                RabbitMQManager.publishMessage("history", key)
                 call.respond(mapOf("song" to song.serialized()))
             } else {
                 call.respond(HttpStatusCode.NotFound, "No song with key $key found.")

@@ -1,8 +1,8 @@
 package com.frankensound.api.songs
 
 import com.frankensound.models.RequestDTO
-import com.frankensound.utils.TestDatabaseFactory
-import com.frankensound.utils.configureTestEnvironment
+import com.frankensound.utils.database.TestDatabaseFactory
+import com.frankensound.utils.database.configureTestEnvironment
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
 import io.ktor.http.*

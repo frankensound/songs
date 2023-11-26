@@ -6,6 +6,7 @@ val exposed_version: String by project
 val h2_version: String by project
 val postgresql_version: String by project
 val hikari_version: String by project
+val rabbitmq_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.21"
@@ -74,6 +75,9 @@ dependencies {
 
     // Database connection pooling
     implementation("com.zaxxer:HikariCP:$hikari_version")
+
+    // Messaging
+    implementation("com.rabbitmq:amqp-client:$rabbitmq_version")
 
     implementation("ch.qos.logback:logback-classic:$logback_version")
 

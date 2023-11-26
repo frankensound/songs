@@ -1,4 +1,4 @@
-package com.frankensound.utils
+package com.frankensound.utils.database
 
 import com.frankensound.models.*
 import com.zaxxer.hikari.HikariConfig
