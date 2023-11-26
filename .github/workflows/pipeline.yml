@@ -16,6 +16,8 @@ jobs:
         with:
           java-version: '21'
           distribution: 'oracle'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
       - name: Run tests
@@ -46,11 +48,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -58,13 +55,11 @@ jobs:
           distribution: 'oracle'
       - name: Build with Gradle
         run: ./gradlew build
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: ./src/main/docker/
-          file: ./src/main/docker/Dockerfile.jvm
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/songs-microservice:latest
+      - name: Build and push Docker image
+        run: ./gradlew jib
+        env:
+          JIB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          JIB_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
   deploy:
       needs: [ build-and-test, publish, snyk-docker-image, snyk-static-code ]
@@ -73,29 +68,6 @@ jobs:
         - name: Finish
           run: echo "Finish deploying"
           shell: bash
-
-  snyk-docker-image:
-      needs: [ publish ]
-      runs-on: ubuntu-latest
-      permissions:
-        security-events: write
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-        - name: Run Snyk to check Docker image for vulnerabilities
-          continue-on-error: true
-          uses: snyk/actions/docker@master
-          env:
-            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          with:
-            image: ${{ secrets.DOCKER_USERNAME }}/songs-microservice:latest
-            args: --file=./Dockerfile
-              --severity-threshold=high
-              --run-quality-checks=true
-        - name: Upload result to GitHub Code Scanning
-          uses: github/codeql-action/upload-sarif@v2
-          with:
-            sarif_file: snyk.sarif
 
   snyk-static-code:
       runs-on: ubuntu-latest
