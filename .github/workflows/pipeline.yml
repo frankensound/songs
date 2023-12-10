@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-and-test:
+    name: Build and test Ktor project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -42,7 +43,8 @@ jobs:
         run: ./gradlew build sonar --info
 
   publish:
-    needs: [ build-and-test, sonarcloud ]
+    name: Publish Dockerfile to Dockerhub
+    needs: [ build-and-test ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,18 +56,26 @@ jobs:
           distribution: 'oracle'
       - name: Build with Gradle
         run: ./gradlew build
-      - name: Build and push Docker image
-        run: ./gradlew jib -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/songs-microservice:latest
 
   deploy:
-      needs: [ build-and-test, publish, snyk-static-code ]
+      name: Deployment
+      needs: [ build-and-test, publish ]
       runs-on: ubuntu-latest
       steps:
         - name: Finish
           run: echo "Finish deploying"
           shell: bash
 
-  snyk-static-code:
+  snyk:
+      name: Static security analysis with Synk
+      needs: [ build-and-test ]
       runs-on: ubuntu-latest
       permissions:
         security-events: write

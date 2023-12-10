@@ -12,7 +12,6 @@ plugins {
     kotlin("jvm") version "1.9.21"
     id("io.ktor.plugin") version "2.3.6"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.21"
-    id("com.google.cloud.tools.jib") version "3.2.0"
     id("org.sonarqube") version "4.4.1.3373"
 }
 
@@ -26,23 +25,10 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-jib {
-    from {
-        image = "eclipse-temurin:21-jdk"
-    }
-    to {
-        image = "marinastancu/songs:latest"
-    }
-    container {
-        entrypoint = listOf("java", "-jar", "/app/libs/songs.jar")
-    }
-}
-
-
 sonar {
     properties {
-        property("sonar.projectKey", "frankensound2_songs")
-        property("sonar.organization", "frankensound2")
+        property("sonar.projectKey", "frankensound_songs")
+        property("sonar.organization", "frankensound")
         property("sonar.host.url", "https://sonarcloud.io")
     }
 }
