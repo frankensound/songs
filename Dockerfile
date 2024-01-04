@@ -1,26 +1,10 @@
-FROM eclipse-temurin:21-jdk as build-stage
+FROM gradle:7-jdk11 AS build
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
+RUN gradle buildFatJar --no-daemon
 
-WORKDIR /build
-
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
-
-RUN chmod +x ./gradlew
-
-COPY gradle.properties .
-
-COPY src src
-
-RUN ./gradlew build
-
-FROM eclipse-temurin:21-jdk
-
-WORKDIR /app
-
-COPY --from=build-stage /build/build/libs/*.jar /app/songs.jar
-
-EXPOSE 8080
-
-CMD ["java", "-jar", "/app/songs.jar"]
+FROM openjdk:21
+EXPOSE 8080:8080
+RUN mkdir /app
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/songs.jar
+ENTRYPOINT ["java","-jar","/app/songs.jar"]

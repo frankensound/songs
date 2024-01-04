@@ -25,7 +25,8 @@ fun Route.songRouting() {
             val key = call.parameters["key"] ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing key.")
             val song = songService.get(key)
             if (song != null) {
-                RabbitMQManager.publishMessage("history", key)
+                val queue = this@route.environment!!.config.property("ktor.rabbitmq.queue").getString()
+                RabbitMQManager.publishMessage(queue, key)
                 call.respond(mapOf("song" to song.serialized()))
             } else {
                 call.respond(HttpStatusCode.NotFound, "No song with key $key found.")
