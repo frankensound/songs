@@ -65,6 +65,7 @@ dependencies {
     // Messaging
     implementation("com.rabbitmq:amqp-client:$rabbitmq_version")
 
+    //Logging
     implementation("ch.qos.logback:logback-classic:$logback_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")

@@ -11,12 +11,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object Songs : IntIdTable("songs", "id") {
     val key: Column<String> = varchar("key", 255).uniqueIndex()
+    val userId: Column<String> = varchar("user_id", 255)
 }
 
 class Song(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<Song>(Songs)
 
     var key by Songs.key
+    var userId by Songs.userId
 }
 
 object Details : IntIdTable("details", "id") {
@@ -35,12 +37,14 @@ class Detail(id: EntityID<Int>) : IntEntity(id) {
 
 @Serializable
 data class SongData(
-    val key: String
+    val key: String,
+    val userId: String
 ) {
     companion object {
         fun Song.serialized() = transaction {
             SongData(
-                key
+                key,
+                userId
             )
         }
     }
@@ -64,6 +68,7 @@ data class DetailData(
 @Serializable
 data class RequestDTO(
     val key: String,
+    val userId: String,
     @SerialName("detail")
     val detailDto: DetailDTO
 ) {

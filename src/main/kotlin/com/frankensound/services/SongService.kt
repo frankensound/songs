@@ -2,10 +2,33 @@ package com.frankensound.services
 
 import com.frankensound.models.*
 import com.frankensound.models.SongData.Companion.serialized
+import com.frankensound.utils.EventBus
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class SongService {
+    init {
+        EventBus.subscribe { jsonElement ->
+            GlobalScope.launch {
+                try {
+                    // Assuming the message contains a userId field
+                    val userId = jsonElement.jsonObject["userId"]?.jsonPrimitive?.content
+                    if (userId != null) {
+                        deleteSongsForUser(userId)
+                    }
+                } catch (e: Exception) {
+                    println("Error handling message: ${e.message}")
+                }
+            }
+        }
+    }
+
     // Fetches all songs from the database
     suspend fun getAll() = transaction {
         Song.all().map { it.serialized() }
@@ -78,5 +101,10 @@ class SongService {
         if (key.isBlank()) {
             throw IllegalArgumentException("Song key cannot be blank")
         }
+    }
+
+    suspend fun deleteSongsForUser(userId: String): Boolean = newSuspendedTransaction {
+        val deletedCount = Songs.deleteWhere { Songs.userId eq userId }
+        deletedCount > 0
     }
 }
