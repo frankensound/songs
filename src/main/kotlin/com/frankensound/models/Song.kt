@@ -24,6 +24,7 @@ class Song(id: EntityID<Int>) : IntEntity(id) {
 object Details : IntIdTable("details", "id") {
     val artistName: Column<String> = varchar("artist_name", 255)
     val songTitle: Column<String> = varchar("song_title", 255)
+    val genre: Column<String> = varchar("genre", 255)
     val song = reference("song_id", Songs, onDelete = ReferenceOption.CASCADE)
 }
 
@@ -32,6 +33,7 @@ class Detail(id: EntityID<Int>) : IntEntity(id) {
 
     var artistName by Details.artistName
     var songTitle by Details.songTitle
+    var genre by Details.genre
     var song by Song referencedOn Details.song
 }
 
@@ -53,13 +55,15 @@ data class SongData(
 @Serializable
 data class DetailData(
     val artistName: String,
-    val songTitle: String
+    val songTitle: String,
+    val genre: String
 ) {
     companion object {
         fun Detail.serialized() = transaction {
             DetailData(
                 artistName,
-                songTitle
+                songTitle,
+                genre
             )
         }
     }
@@ -77,6 +81,8 @@ data class RequestDTO(
         @SerialName("artist_name")
         val artistName: String,
         @SerialName("song_title")
-        val songTitle: String
+        val songTitle: String,
+        @SerialName("genre")
+        val genre: String
     )
 }

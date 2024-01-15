@@ -29,9 +29,9 @@ class DeleteTests {
         application {
             configureTestEnvironment()
         }
-        val song = songService.create("test", DetailData("artist","title"))
-        val key = song.key
-        client.delete("/songs/$key").apply {
+        val song = songService.create("test", DetailData("artist","title", "genre"), "test")
+        val songId = song.id.value
+        client.delete("/songs/$songId").apply {
             assertEquals(HttpStatusCode.Accepted, status)
         }
     }
@@ -44,21 +44,21 @@ class DeleteTests {
         application {
             configureTestEnvironment()
         }
-        val key = "key123"
-        client.delete("/songs/$key").apply {
+        val songId = 12345
+        client.delete("/songs/$songId").apply {
             assertEquals(HttpStatusCode.NotFound, status)
         }
     }
 
     @Test
-    fun testDeleteSongMissingKey() = testApplication {
+    fun testDeleteSongMissingId() = testApplication {
         environment {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
         application {
             configureTestEnvironment()
         }
-        client.delete("/songs/}").apply {
+        client.delete("/songs/").apply {
             assertEquals(HttpStatusCode.NotFound, status)
         }
     }

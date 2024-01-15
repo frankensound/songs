@@ -32,10 +32,11 @@ class UpdateTests {
             configureTestEnvironment()
         }
         val key = "test"
-        songService.create(key, DetailData("artist","title"))
-        client.put("/songs/$key") {
+        val song = songService.create(key, DetailData("artist","title", "genre"), "test")
+        val songId = song.id.value
+        client.put("/songs/$songId") {
             contentType(ContentType.Application.Json)
-            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", RequestDTO.DetailDTO("artist", "title")))
+            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", "userId", RequestDTO.DetailDTO("artist", "title", "genre")))
             setBody(request)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)
@@ -50,10 +51,10 @@ class UpdateTests {
         application {
             configureTestEnvironment()
         }
-        val key = "test"
-        client.put("/songs/$key") {
+        val songId = 1245
+        client.put("/songs/$songId") {
             contentType(ContentType.Application.Json)
-            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", RequestDTO.DetailDTO("artist", "title")))
+            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", "userId", RequestDTO.DetailDTO("artist", "title", "genre")) )
             setBody(request)
         }.apply {
             assertEquals(HttpStatusCode.NotFound, status)

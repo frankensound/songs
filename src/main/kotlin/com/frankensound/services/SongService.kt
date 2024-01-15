@@ -34,18 +34,24 @@ class SongService {
         Song.all().map { it.serialized() }
     }
 
+    // Fetches a single song by id
+    suspend fun get(id: Int): Song? = transaction {
+        Song.find { Songs.id eq id }.singleOrNull()
+    }
+
     // Fetches a single song by key
     suspend fun get(key: String): Song? = transaction {
         Song.find { Songs.key eq key }.singleOrNull()
     }
 
     // Creates a new song in the database
-    suspend fun create(key: String, detail: DetailData): Song {
+    suspend fun create(key: String, detail: DetailData, userId: String): Song {
         val query = transaction {
             validateSongKey(key)
 
             Song.new {
                 this.key = key
+                this.userId = userId
             }
         }
 
@@ -57,10 +63,8 @@ class SongService {
     }
 
     // Updates an existing song
-    suspend fun update(key: String, detail: DetailData) = newSuspendedTransaction {
-        validateSongKey(key)
-        val song = get(key)
-
+    suspend fun update(id: Int, detail: DetailData) = newSuspendedTransaction {
+        val song = get(id)
         if(song == null){
             false
         }
@@ -70,9 +74,9 @@ class SongService {
         }
     }
 
-    // Deletes a song by key
-    suspend fun delete(key: String): Boolean = newSuspendedTransaction {
-        val query = get(key)
+    // Deletes a song by id
+    suspend fun delete(id: Int): Boolean = newSuspendedTransaction {
+        val query = get(id)
         if(query == null){
             false
         }
@@ -82,16 +86,17 @@ class SongService {
         }
     }
 
-    // Inserts song detail and returns the generated ID
+    // Inserts song detail and returns the generated id
     private suspend fun insertDetail(song: Song, detail: DetailData): Detail = transaction {
         Detail.new {
             this.song = song
             this.artistName = detail.artistName
             this.songTitle = detail.songTitle
+            this.genre = detail.genre
         }
     }
 
-    // Fetches detail by ID
+    // Fetches detail by id
     private suspend fun getDetailById(id: Int): Detail? = transaction {
         Detail.find { Details.id eq id }.singleOrNull()
     }

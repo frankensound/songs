@@ -32,7 +32,7 @@ class CreateTests {
         }
         client.post("/songs") {
             contentType(ContentType.Application.Json)
-            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", RequestDTO.DetailDTO("artist", "title")))
+            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", "userId", RequestDTO.DetailDTO("artist", "title", "genre")))
             setBody(request)
         }.apply {
             assertEquals(HttpStatusCode.Found, status)

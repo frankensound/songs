@@ -30,7 +30,7 @@ class GetAllTests {
         application {
             configureTestEnvironment()
         }
-        songService.create("test", DetailData("artist","title"))
+        songService.create("test", DetailData("artist","title", "genre"), "test")
         client.get("/songs").apply {
             assertEquals(HttpStatusCode.OK, status)
             assertTrue { bodyAsText().contains("test") }
