@@ -29,7 +29,8 @@ class GetTests {
             configureTestEnvironment()
         }
         val songId = 12345
-        client.get("/songs/$songId").apply {
+        client.get("/songs/$songId"){
+            header("UserID", "test")}.apply {
             assertEquals(HttpStatusCode.NotFound, status)
         }
     }
@@ -42,7 +43,8 @@ class GetTests {
         application {
             configureTestEnvironment()
         }
-        client.get("/songs/").apply {
+        client.get("/songs/"){
+            header("UserID", "test")}.apply {
             assertEquals(HttpStatusCode.BadRequest, status)
         }
     }

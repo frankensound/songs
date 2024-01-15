@@ -72,7 +72,6 @@ data class DetailData(
 @Serializable
 data class RequestDTO(
     val key: String,
-    val userId: String,
     @SerialName("detail")
     val detailDto: DetailDTO
 ) {
