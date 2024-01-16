@@ -87,7 +87,7 @@ jobs:
         - name: Deploy to AKS
           run: kubectl apply -f ./deployments
         - name: Restart Deployment
-          run: kubectl rollout restart deployment/songs-deployment
+          run: kubectl rollout restart deployment/songs
 
   snyk-code:
       name: Static code security analysis with Synk
