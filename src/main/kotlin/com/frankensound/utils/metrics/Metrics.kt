@@ -10,6 +10,7 @@ object MetricsRegistry {
     val requestDurationHistogram: Histogram = Histogram.build()
         .name("request_duration_milliseconds")
         .help("Request duration in milliseconds.")
+        .labelNames("service")
         .buckets(0.1, 1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 200.0, 500.0) // Define buckets in milliseconds
         .register()
 }
@@ -21,7 +22,8 @@ fun Application.configureRequestDurationRecording() {
             proceed()
         } finally {
             val duration = (System.nanoTime() - start) / 1_000_000.0 // Convert nanoseconds to milliseconds
-            MetricsRegistry.requestDurationHistogram.observe(duration)
+            val serviceName = "songs"
+            MetricsRegistry.requestDurationHistogram.labels(serviceName).observe(duration)
         }
     }
 }
