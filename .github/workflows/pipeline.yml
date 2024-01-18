@@ -67,7 +67,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/songs-microservice:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/songs:latest
 
   deploy:
       name: Deployment
