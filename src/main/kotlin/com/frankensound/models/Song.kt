@@ -70,8 +70,13 @@ data class DetailData(
 }
 
 @Serializable
+data class SongWithDetails(
+    val song: SongData,
+    val details: DetailData
+)
+
+@Serializable
 data class RequestDTO(
-    val key: String,
     @SerialName("detail")
     val detailDto: DetailDTO
 ) {

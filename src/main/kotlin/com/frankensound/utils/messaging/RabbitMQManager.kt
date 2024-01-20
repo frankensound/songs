@@ -4,6 +4,7 @@ import com.frankensound.utils.EventBus
 import com.rabbitmq.client.*
 import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
+import javax.net.ssl.SSLContext
 
 fun Application.messagingModule() {
     val config = environment.config
@@ -23,14 +24,23 @@ object RabbitMQManager {
     private lateinit var channel: Channel
 
     fun init(host : String, port : String, user : String, password : String, ) {
-        val factory = ConnectionFactory()
-        factory.host = host
-        factory.port = port.toInt()
-        factory.virtualHost = "/"
-        factory.username = user
-        factory.password = password
-        connection = factory.newConnection()
-        channel = connection.createChannel()
+        try {
+            val factory = ConnectionFactory()
+            factory.host = host
+            factory.port = port.toInt()
+            factory.virtualHost = "/"
+            factory.username = user
+            factory.password = password
+
+            // Enable SSL
+            val sslContext = SSLContext.getDefault()
+            factory.useSslProtocol(sslContext)
+
+            connection = factory.newConnection()
+            channel = connection.createChannel()
+        } catch (e: Exception) {
+            println("Failed to initialize RabbitMQ: ${e.message}")
+        }
     }
 
     fun publishMessage(queueName: String, message: String) {

@@ -7,6 +7,7 @@ val h2_version: String by project
 val postgresql_version: String by project
 val hikari_version: String by project
 val rabbitmq_version: String by project
+val aws_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.21"
@@ -64,6 +65,9 @@ dependencies {
 
     // Messaging
     implementation("com.rabbitmq:amqp-client:$rabbitmq_version")
+
+    // AWS S3
+    implementation("aws.sdk.kotlin:s3:$aws_version")
 
     //Logging
     implementation("ch.qos.logback:logback-classic:$logback_version")

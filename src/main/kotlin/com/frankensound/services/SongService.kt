@@ -44,6 +44,13 @@ class SongService {
         Song.find { Songs.key eq key }.singleOrNull()
     }
 
+    // Fetches a single song and its details by id
+    suspend fun getWithDetails(id: Int): Pair<Song?, Detail?> = transaction {
+        val song = Song.findById(id)
+        val detail = song?.let { Detail.find { Details.song eq it.id }.singleOrNull() }
+        song to detail
+    }
+
     // Creates a new song in the database
     suspend fun create(key: String, detail: DetailData, userId: String): Song {
         val query = transaction {

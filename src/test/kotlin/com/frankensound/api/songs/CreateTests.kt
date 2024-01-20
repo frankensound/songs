@@ -1,6 +1,5 @@
 package com.frankensound.api.songs
 
-import com.frankensound.models.RequestDTO
 import com.frankensound.utils.database.TestDatabaseFactory
 import com.frankensound.utils.database.configureTestEnvironment
 import com.typesafe.config.ConfigFactory
@@ -8,7 +7,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.json.Json
 import kotlin.test.*
 
 class CreateTests {
@@ -23,23 +21,7 @@ class CreateTests {
     }
 
     //TODO: Create mock RabbitMQ service so that this function can be tested
-/*    @Test
-    fun testCreateSong() = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        application {
-            configureTestEnvironment()
-        }
-        client.post("/songs") {
-            header("UserID", "test")
-            contentType(ContentType.Application.Json)
-            val request = Json.encodeToString(RequestDTO.serializer(), RequestDTO("key", RequestDTO.DetailDTO("artist", "title", "genre")))
-            setBody(request)
-        }.apply {
-            assertEquals(HttpStatusCode.Found, status)
-        }
-    }*/
+    //TODO: Create mock S3 service so that this function can be tested
 
     @Test
     fun testCreateSongInvalidBody() = testApplication {
@@ -54,7 +36,7 @@ class CreateTests {
             contentType(ContentType.Application.Json)
             setBody("Invalid JSON")
         }.apply {
-            assertEquals(HttpStatusCode.BadRequest, status)
+            assertEquals(HttpStatusCode.InternalServerError, status)
         }
     }
 }

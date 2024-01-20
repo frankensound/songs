@@ -1,7 +1,5 @@
 package com.frankensound.api.songs
 
-import com.frankensound.models.DetailData
-import com.frankensound.routes.songService
 import com.frankensound.utils.database.TestDatabaseFactory
 import com.frankensound.utils.database.configureTestEnvironment
 import com.typesafe.config.ConfigFactory
@@ -21,20 +19,8 @@ class DeleteTests {
     fun tearDown() {
         TestDatabaseFactory.cleanUp()
     }
-    @Test
-    fun testDeleteSong() = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        application {
-            configureTestEnvironment()
-        }
-        val song = songService.create("test", DetailData("artist","title", "genre"), "test")
-        val songId = song.id.value
-        client.delete("/songs/$songId").apply {
-            assertEquals(HttpStatusCode.Accepted, status)
-        }
-    }
+
+    //TODO: Create mock S3 service so that this function can be tested
 
     @Test
     fun testDeleteNonexistentSong() = testApplication {

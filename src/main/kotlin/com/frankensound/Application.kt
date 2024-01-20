@@ -4,6 +4,7 @@ import com.frankensound.plugins.*
 import com.frankensound.utils.database.databaseModule
 import com.frankensound.utils.messaging.RabbitMQManager
 import com.frankensound.utils.messaging.messagingModule
+import com.frankensound.utils.s3Client
 import io.ktor.server.application.*
 import configureMetrics
 
@@ -17,8 +18,9 @@ fun Application.module() {
     databaseModule()
     configureSerialization()
     configureRouting()
-    // Subscribe to ApplicationStopping event to close RabbitMQ connection
+    // Subscribe to ApplicationStopping event to close RabbitMQ and S3 connection
     environment.monitor.subscribe(ApplicationStopping) {
         RabbitMQManager.close()
+        s3Client.close()
     }
 }
