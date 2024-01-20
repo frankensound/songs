@@ -4,7 +4,9 @@ import com.frankensound.models.*
 import com.frankensound.models.DetailData.Companion.serialized
 import com.frankensound.models.SongData.Companion.serialized
 import com.frankensound.services.SongService
+import com.frankensound.utils.ResponseS3
 import com.frankensound.utils.deleteS3Object
+import com.frankensound.utils.getObject
 import com.frankensound.utils.messaging.RabbitMQManager
 import com.frankensound.utils.putS3Object
 import io.ktor.http.*
@@ -13,6 +15,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -60,11 +63,17 @@ fun Route.songRouting() {
             val (song, detail) = songService.getWithDetails(id)
 
             if (song == null || detail == null) {
-                call.respond(HttpStatusCode.NotFound, "No song or details found for key $id.")
+                call.respond(HttpStatusCode.NotFound, "No song or details found for id $id.")
                 return@get
             }
 
-            val response = SongWithDetails(song.serialized(), detail.serialized())
+            val response = buildJsonObject {
+                put("key", song.key)
+                put("userId", song.userId)
+                put("artistName", detail.artistName)
+                put("songTitle", detail.songTitle)
+                put("genre", detail.genre)
+            }
 
             val historyQueue = this@route.environment!!.config.property("ktor.rabbitmq.queue.history").getString()
             val message = createHistoryMessageJson(
@@ -73,12 +82,49 @@ fun Route.songRouting() {
             )
             RabbitMQManager.publishMessage(historyQueue, message)
 
-            call.respond(response)
+            call.respond(Json.encodeToString(JsonObject.serializer(), response))
+        }
+        get("{id?}/play") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing or invalid song id.")
+            val userId = call.request.headers["UserID"]
+
+            if (userId == null) {
+                return@get call.respond(HttpStatusCode.BadRequest, "You don't seem to be logged in!")
+            }
+
+            try {
+                val song = songService.get(id) ?: return@get call.respond(HttpStatusCode.NotFound, "No song found for id $id.")
+                val header = call.request.header(HttpHeaders.Range) ?: return@get call.respond(HttpStatusCode.BadRequest, "Range header is required.")
+
+                if (!header.startsWith("bytes=")) {
+                    return@get call.respond(HttpStatusCode.BadRequest, "Range header must start with 'bytes='.")
+                }
+
+                val range = header.substringAfter("bytes=").split("-")
+                val start = range.getOrNull(0)?.toIntOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid start range.")
+                val end = range.getOrNull(1)?.toIntOrNull()
+
+                val adjustedEnd = end ?: (start + 500000 - 1) // Adjust the end if it's not specified
+
+                if (adjustedEnd < start) {
+                    return@get call.respond(HttpStatusCode.BadRequest, "Invalid range.")
+                }
+
+                val rangeVal = "bytes=$start-$adjustedEnd"
+                val responseS3: ResponseS3 = getObject(bucketName, song.key, rangeVal) ?: return@get call.respond(HttpStatusCode.NotFound, "Content not found in S3.")
+
+                call.response.headers.append(HttpHeaders.AcceptRanges, "bytes")
+                call.response.headers.append(HttpHeaders.ContentRange, responseS3.contentRange!!)
+                call.respondBytes(responseS3.data, status = HttpStatusCode.PartialContent)
+            } catch (e: Exception) {
+                application.log.error("Error while trying to play song: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, "An error occurred while processing the request.")
+            }
         }
         post() {
             try {
                 val multipart = call.receiveMultipart()
-                var detailDto: RequestDTO.DetailDTO? = null
+                var detail: DetailData? = null
                 var fileBytes: ByteArray? = null
                 var proceed = true
 
@@ -86,9 +132,8 @@ fun Route.songRouting() {
                     when (part) {
                         is PartData.FormItem -> {
                             if (part.name == "details") {
-                                val detailJson = part.value
-                                detailDto = try {
-                                    Json.decodeFromString(RequestDTO.serializer(), detailJson).detailDto
+                                detail = try {
+                                    Json.decodeFromString(DetailData.serializer(), part.value)
                                 } catch (e: Exception) {
                                     call.respond(HttpStatusCode.BadRequest, "Invalid details format: ${e.message}")
                                     proceed = false
@@ -113,7 +158,7 @@ fun Route.songRouting() {
 
                 if (!proceed) return@post
 
-                if (detailDto == null || fileBytes == null) {
+                if (detail == null || fileBytes == null) {
                     call.respond(HttpStatusCode.BadRequest, "Missing required data (details or file).")
                     return@post
                 }
@@ -127,7 +172,7 @@ fun Route.songRouting() {
                 val objectKey = "songs/${UUID.randomUUID()}"
                 putS3Object(bucketName, objectKey, fileBytes!!)
 
-                val song = songService.create(objectKey, DetailData(detailDto!!.artistName, detailDto!!.songTitle, detailDto!!.genre), userId)
+                val song = songService.create(objectKey, detail!!, userId)
 
                 val songId = song.id.value
 
@@ -139,19 +184,26 @@ fun Route.songRouting() {
                 )
                 RabbitMQManager.publishMessage(eventsQueue, message)
 
-                call.respond(HttpStatusCode.OK, "Song created successfully.")
+                call.respond(HttpStatusCode.Created, song.serialized())
 
             } catch (e: Exception) {
                 application.log.error("Error handling song upload", e)
                 call.respond(HttpStatusCode.InternalServerError, "An error occurred while processing the request.")
             }
         }
-        put<RequestDTO>("{id}") { request ->
-            val id = call.parameters["id"]?.toInt() ?: return@put call.respond(
+        put("{id}") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(
                 HttpStatusCode.BadRequest,
-                "Missing or invalid song id!"
+                "Missing or invalid song id."
             )
-            val detail = DetailData(request.detailDto.artistName, request.detailDto.songTitle, request.detailDto.genre)
+
+            val detail = try {
+                call.receive<DetailData>()
+            } catch (e: SerializationException) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid details format: ${e.message}")
+                return@put
+            }
+
             val updated = songService.update(id, detail)
             if (updated) {
                 call.respond(HttpStatusCode.OK, "Song updated successfully.")

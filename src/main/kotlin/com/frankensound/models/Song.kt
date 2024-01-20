@@ -54,8 +54,11 @@ data class SongData(
 
 @Serializable
 data class DetailData(
+    @SerialName("artist_name")
     val artistName: String,
+    @SerialName("song_title")
     val songTitle: String,
+    @SerialName("genre")
     val genre: String
 ) {
     companion object {
@@ -67,26 +70,4 @@ data class DetailData(
             )
         }
     }
-}
-
-@Serializable
-data class SongWithDetails(
-    val song: SongData,
-    val details: DetailData
-)
-
-@Serializable
-data class RequestDTO(
-    @SerialName("detail")
-    val detailDto: DetailDTO
-) {
-    @Serializable
-    data class DetailDTO(
-        @SerialName("artist_name")
-        val artistName: String,
-        @SerialName("song_title")
-        val songTitle: String,
-        @SerialName("genre")
-        val genre: String
-    )
 }
