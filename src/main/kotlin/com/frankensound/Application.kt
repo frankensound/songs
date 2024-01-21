@@ -2,6 +2,7 @@ package com.frankensound
 
 import com.frankensound.plugins.*
 import com.frankensound.services.SongService
+import com.frankensound.utils.database.DatabaseFactory
 import com.frankensound.utils.database.databaseModule
 import com.frankensound.utils.messaging.RabbitMQManager
 import com.frankensound.utils.messaging.messagingModule
@@ -31,5 +32,6 @@ fun Application.module() {
         RabbitMQManager.close()
         s3Client.close()
         ServiceRegistry.songService.close()
+        DatabaseFactory.close()
     }
 }

@@ -18,6 +18,7 @@ fun Application.databaseModule() {
 }
 
 object DatabaseFactory {
+    private var dataSource: HikariDataSource? = null
     fun init(url: String, user: String, pass: String, driver: String) {
         val config = HikariConfig().apply {
             jdbcUrl = url
@@ -28,6 +29,7 @@ object DatabaseFactory {
             idleTimeout = 10000
             maxLifetime = 1800000
             connectionTimeout = 30000
+            leakDetectionThreshold = 30000
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
@@ -38,5 +40,9 @@ object DatabaseFactory {
         transaction(database) {
             SchemaUtils.create(Songs, Details)
         }
+    }
+
+    fun close() {
+        dataSource?.close()
     }
 }
