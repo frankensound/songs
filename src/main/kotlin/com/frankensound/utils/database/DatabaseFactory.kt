@@ -24,7 +24,7 @@ object DatabaseFactory {
             driverClassName = driver
             username = user
             password = pass
-            maximumPoolSize = 50
+            maximumPoolSize = 30
 
             idleTimeout = 10000
 
