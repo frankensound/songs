@@ -69,6 +69,8 @@ dependencies {
     // AWS S3
     implementation("aws.sdk.kotlin:s3:$aws_version")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+
     //Logging
     implementation("ch.qos.logback:logback-classic:$logback_version")
 

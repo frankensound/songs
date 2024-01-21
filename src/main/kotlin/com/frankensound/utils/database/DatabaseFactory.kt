@@ -24,7 +24,18 @@ object DatabaseFactory {
             driverClassName = driver
             username = user
             password = pass
-            maximumPoolSize = 30
+            maximumPoolSize = 50
+
+            idleTimeout = 10000
+
+            maxLifetime = 1800000
+
+            connectionTimeout = 30000
+            
+            addDataSourceProperty("cachePrepStmts", "true")
+            addDataSourceProperty("prepStmtCacheSize", "250")
+            addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+            addDataSourceProperty("useServerPrepStmts", "true")
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
