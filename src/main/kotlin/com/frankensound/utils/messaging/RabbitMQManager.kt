@@ -14,14 +14,18 @@ fun Application.messagingModule() {
     val password = config.property("ktor.rabbitmq.password").getString()
 
     RabbitMQManager.init(host, port, user, password)
-
-    val deletionQueue = config.property("ktor.rabbitmq.queue.deletion").getString()
-    RabbitMQManager.consumeMessages(deletionQueue)
+    
+    if (RabbitMQManager.isConnected()) {
+        val deletionQueue = config.property("ktor.rabbitmq.queue.deletion").getString()
+        RabbitMQManager.consumeMessages(deletionQueue)
+    } else {
+        println("RabbitMQ connection failed, skipping message consumption setup")
+    }
 }
 
 object RabbitMQManager {
-    private lateinit var connection: Connection
-    private lateinit var channel: Channel
+    private var connection: Connection? = null
+    private var channel: Channel? = null
 
     fun init(host : String, port : String, user : String, password : String, ) {
         try {
@@ -37,19 +41,25 @@ object RabbitMQManager {
             factory.useSslProtocol(sslContext)
 
             connection = factory.newConnection()
-            channel = connection.createChannel()
+            channel = connection?.createChannel()
+            println("RabbitMQ connected successfully")
         } catch (e: Exception) {
             println("Failed to initialize RabbitMQ: ${e.message}")
         }
     }
 
     fun publishMessage(queueName: String, message: String) {
-        channel.queueDeclare(queueName, true, false, false, null)
-        channel.basicPublish("", queueName, null, message.toByteArray())
+        channel?.queueDeclare(queueName, true, false, false, null)
+        channel?.basicPublish("", queueName, null, message.toByteArray())
         println(" [x] Sent '$message'")
     }
 
     fun consumeMessages(queueName: String) {
+        val channel = this.channel
+        if (channel == null) {
+            println("RabbitMQ channel is not initialized")
+            return
+        }
         channel.queueDeclare(queueName, true, false, false, null)
         val consumer = object : DefaultConsumer(channel) {
             override fun handleDelivery(
@@ -66,8 +76,17 @@ object RabbitMQManager {
         channel.basicConsume(queueName, true, consumer)
     }
 
+    fun isConnected(): Boolean {
+        return this.connection != null && this.channel != null
+    }
+
     fun close() {
-        channel.close()
-        connection.close()
+        try {
+            channel?.close()
+            connection?.close()
+            println("RabbitMQ connection closed")
+        } catch (e: Exception) {
+            println("Error closing RabbitMQ connection: ${e.message}")
+        }
     }
 }
