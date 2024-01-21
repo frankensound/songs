@@ -10,7 +10,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 
 class SongService {
     private val serviceScope = CoroutineScope(Dispatchers.IO)
@@ -33,7 +32,7 @@ class SongService {
     }
 
     // Fetches all songs from the database
-    private suspend fun getAll() = newSuspendedTransaction {
+    suspend fun getAll() = newSuspendedTransaction {
         Song.all().map { it.serialized() }
     }
 
@@ -97,7 +96,7 @@ class SongService {
     }
 
     // Inserts song detail and returns the generated id
-    private suspend fun insertDetail(song: Song, detail: DetailData): Detail = newSuspendedTransaction {
+    suspend fun insertDetail(song: Song, detail: DetailData): Detail = newSuspendedTransaction {
         Detail.new {
             this.song = song
             this.artistName = detail.artistName
@@ -107,12 +106,12 @@ class SongService {
     }
 
     // Fetches detail by id
-    private suspend fun getDetailById(id: Int): Detail? = newSuspendedTransaction {
+    suspend fun getDetailById(id: Int): Detail? = newSuspendedTransaction {
         Detail.find { Details.id eq id }.singleOrNull()
     }
 
     // Validates the song key
-    private fun validateSongKey(key: String) {
+    fun validateSongKey(key: String) {
         if (key.isBlank()) {
             throw IllegalArgumentException("Song key cannot be blank")
         }
