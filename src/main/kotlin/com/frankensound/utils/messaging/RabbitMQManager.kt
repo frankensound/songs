@@ -3,6 +3,9 @@ package com.frankensound.utils.messaging
 import com.frankensound.utils.EventBus
 import com.rabbitmq.client.*
 import io.ktor.server.application.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import javax.net.ssl.SSLContext
 
@@ -68,9 +71,11 @@ object RabbitMQManager {
                 properties: AMQP.BasicProperties,
                 body: ByteArray
             ) {
-                val messageJson = Json.parseToJsonElement(String(body, Charsets.UTF_8))
-                println(" [x] Received message: $messageJson")
-                EventBus.emit(messageJson)
+                CoroutineScope(Dispatchers.IO).launch {
+                    val messageJson = Json.parseToJsonElement(String(body, Charsets.UTF_8))
+                    println(" [x] Received message: $messageJson")
+                    EventBus.emit(messageJson)
+                }
             }
         }
         channel.basicConsume(queueName, true, consumer)
