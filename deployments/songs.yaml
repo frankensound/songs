@@ -21,6 +21,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: PORT
+              value: "8080"
             - name: DB_URL
               valueFrom:
                 secretKeyRef:
@@ -30,7 +32,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: songsdb
-                  key: USER
+                  key: USERNAME
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -56,11 +58,41 @@ spec:
                 secretKeyRef:
                   name: rabbitmq
                   key: PASSWORD
-            - name: RABBITMQ_QUEUE
+            - name: HISTORY_QUEUE
               valueFrom:
                 secretKeyRef:
                   name: rabbitmq
-                  key: QUEUE
+                  key: HISTORY_QUEUE
+            - name: DELETION_QUEUE
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq
+                  key: DELETION_QUEUE
+            - name: EVENTS_QUEUE
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq
+                  key: EVENTS_QUEUE
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: REGION
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: REGION
+            - name: BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: aws
+                  key: BUCKET_NAME
 ---
 apiVersion: v1
 kind: Service
