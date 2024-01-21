@@ -1,9 +1,8 @@
 package com.frankensound.routes
 
+import com.frankensound.ServiceRegistry
 import com.frankensound.models.*
-import com.frankensound.models.DetailData.Companion.serialized
 import com.frankensound.models.SongData.Companion.serialized
-import com.frankensound.services.SongService
 import com.frankensound.utils.ResponseS3
 import com.frankensound.utils.deleteS3Object
 import com.frankensound.utils.getObject
@@ -22,7 +21,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import java.util.*
 
-val songService = SongService()
+val songService = ServiceRegistry.songService
 val bucketName = System.getenv("BUCKET_NAME")
 
 fun createEventMessageJson(userId: String, actionType: String, objectId: Int): String {
